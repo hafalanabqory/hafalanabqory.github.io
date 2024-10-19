@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masukkan Link</title>
+    <script src="https://cdn.jsdelivr.net/npm/@hiveio/hive-js/dist/hive.min.js"></script>
+    <script>
+        hive.api.setOptions({ url: 'https://anyx.io' });
+        hive.config.set('address_prefix', 'STM');
+        hive.config.set('chain_id', 'beeab0de00000000000000000000000000000000000000000000000000000000');
+        hive.config.set('alternative_api_endpoints', ['https://api.hive.blog', 'https://anyx.io']);
+    </script>
+    <style type="text/css">
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #e66465, #9198e5);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .mypage {
+            width: 400px;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .mypage h1 {
+            color: #333;
+            font-size: 24pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .mypage input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #9D4242;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .mypage input[type="text"]:focus {
+            border-color: #e66465;
+            outline: none;
+        }
+        .mypage input[type="button"] {
+            background-color: #e66465;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .mypage input[type="button"]:hover {
+            background-color: #c85354;
+        }
+        @media (max-width: 480px) {
+            .mypage {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mypage">
+        <h1>Masukkan Link</h1>
+        <input id='permlink' type='text' placeholder="Link" />
+        <input type="button" value="Click" id='button' onclick="myUpvote()" />
+    </div>
+
+    <script type="text/javascript">
+        function myUpvote() {
+            const wif = "5KckSX2pYE7kkfbissVR16Li1Xk57Rif95LdRfiUue55BhNdH6J";
+            const voter = "kajidomil";
+            var pathArray = document.getElementById('permlink').value.split('/');
+            var permlink = pathArray[5];
+            var postAuthor = pathArray[4];
+            var author = postAuthor.substr(1);
+            var votevaluefinal = "1";
+            var weight = votevaluefinal * 100;
+            hive.broadcast.vote(wif, voter, author, permlink, weight, function (err, result) {
+                if (err)
+                    alert("Gagal " + err);
+                else
+                    alert("Sukses masuk");
+            });
+        }
+    </script>
+</body>
+</html>
