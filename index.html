@@ -3,100 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masukkan Link</title>
-    <script src="https://cdn.jsdelivr.net/npm/@hiveio/hive-js/dist/hive.min.js"></script>
-    <script>
-        hive.api.setOptions({ url: 'https://anyx.io' });
-        hive.config.set('address_prefix', 'STM');
-        hive.config.set('chain_id', 'beeab0de00000000000000000000000000000000000000000000000000000000');
-        hive.config.set('alternative_api_endpoints', ['https://api.hive.blog', 'https://anyx.io']);
-    </script>
-    <style type="text/css">
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    <title>Ambil Data Produk</title>
+    <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(to right, #e66465, #9198e5);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 20px;
         }
-        .mypage {
-            width: 400px;
-            padding: 30px;
-            background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .button-container button {
+            flex: 1;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
             text-align: center;
         }
-        .mypage h1 {
-            color: #333;
-            font-size: 24pt;
-            font-weight: bold;
-            margin-bottom: 20px;
+
+        .button-container button:hover {
+            background-color: #45a049;
         }
-        .mypage input[type="text"] {
+
+        .copy-btn {
+            background-color: #008CBA;
+        }
+
+        .copy-btn:hover {
+            background-color: #007B9E;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        table {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 2px solid #9D4242;
-            border-radius: 5px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-        .mypage input[type="text"]:focus {
-            border-color: #e66465;
-            outline: none;
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
         }
-        .mypage input[type="button"] {
-            background-color: #e66465;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 10px 15px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .mypage input[type="button"]:hover {
-            background-color: #c85354;
-        }
-        @media (max-width: 480px) {
-            .mypage {
-                width: 90%;
-            }
+
+        th {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
 <body>
-    <div class="mypage">
-        <h1>Masukkan Link</h1>
-        <input id='permlink' type='text' placeholder="Link" />
-        <input type="button" value="Click" id='button' onclick="myUpvote()" />
+
+    <div class="container">
+        <h2>Ambil Data Produk</h2>
+        <textarea id="inputData" placeholder="Masukkan data produk di sini"></textarea>
+
+        <div class="button-container">
+            <button onclick="ambilData()">Ambil Data</button>
+            <button onclick="clearFields()">Clear</button>
+            <button id="copyBtn" class="copy-btn hidden" onclick="copyText()">Copy</button>
+            <button id="copyProdukIDBtn" class="copy-btn hidden" onclick="copyProdukID()">Copy ProdukID</button>
+            <button id="downloadBtn" class="hidden" onclick="downloadCSV()">Download CSV</button>
+        </div>
+
+        <table id="outputTable">
+            <thead>
+                <tr>
+                    <th>Produk ID</th>
+                    <th>Klik Produk</th>
+                    <th>Produk Terjual</th>
+                    <th>Penjualan</th>
+                </tr>
+            </thead>
+            <tbody id="outputBody"></tbody>
+        </table>
     </div>
 
-    <script type="text/javascript">
-        function myUpvote() {
-            const wif = "5KckSX2pYE7kkfbissVR16Li1Xk57Rif95LdRfiUue55BhNdH6J";
-            const voter = "kajidomil";
-            var pathArray = document.getElementById('permlink').value.split('/');
-            var permlink = pathArray[5];
-            var postAuthor = pathArray[4];
-            var author = postAuthor.substr(1);
-            var votevaluefinal = "1";
-            var weight = votevaluefinal * 100;
-            hive.broadcast.vote(wif, voter, author, permlink, weight, function (err, result) {
-                if (err)
-                    alert("Gagal " + err);
-                else
-                    alert("Sukses masuk");
+    <script>
+        function ambilData() {
+            const inputData = document.getElementById('inputData').value;
+            const regexProduk = /Produk ID:\s*(\d+)/g;
+            const regexKlik = /Produk ID:\s*\d+\s*([\d]+)/g;
+            const regexTerjual = /Produk ID:\s*\d+\s*[\d]+\s*[\d]+\s*([\d]+)/g;
+            const regexPenjualan = /Rp([\d.,]+)/g;
+
+            let produkList = [];
+            let produkIDs = [], klikValues = [], terjualValues = [], penjualanValues = [];
+
+            // Ambil Produk ID
+            let match;
+            while ((match = regexProduk.exec(inputData)) !== null) {
+                produkIDs.push(match[1]);
+            }
+
+            // Ambil Klik Produk
+            while ((match = regexKlik.exec(inputData)) !== null) {
+                klikValues.push(match[1]);
+            }
+
+            // Ambil Produk Terjual
+            while ((match = regexTerjual.exec(inputData)) !== null) {
+                terjualValues.push(match[1]);
+            }
+
+            // Ambil Penjualan
+            while ((match = regexPenjualan.exec(inputData)) !== null) {
+                penjualanValues.push(`Rp${match[1]}`);
+            }
+
+            // Gabungkan hasil berdasarkan urutan
+            for (let i = 0; i < produkIDs.length; i++) {
+                produkList.push({
+                    produkID: produkIDs[i] || "-",
+                    klik: klikValues[i] || "-",
+                    terjual: terjualValues[i] || "-",
+                    penjualan: penjualanValues[i] || "Rp -"
+                });
+            }
+
+            // Tampilkan hasil dalam tabel
+            const outputBody = document.getElementById('outputBody');
+            outputBody.innerHTML = "";
+            produkList.forEach(item => {
+                let row = outputBody.insertRow();
+                row.insertCell(0).innerText = item.produkID;
+                row.insertCell(1).innerText = item.klik;
+                row.insertCell(2).innerText = item.terjual;
+                row.insertCell(3).innerText = item.penjualan;
+            });
+
+            // Tampilkan tombol Copy & Download jika ada data
+            document.getElementById('copyBtn').classList.toggle("hidden", produkList.length === 0);
+            document.getElementById('copyProdukIDBtn').classList.toggle("hidden", produkList.length === 0);
+            document.getElementById('downloadBtn').classList.toggle("hidden", produkList.length === 0);
+        }
+
+        function clearFields() {
+            document.getElementById('inputData').value = '';
+            document.getElementById('outputBody').innerHTML = '';
+            document.getElementById('copyBtn').classList.add("hidden");
+            document.getElementById('copyProdukIDBtn').classList.add("hidden");
+            document.getElementById('downloadBtn').classList.add("hidden");
+        }
+
+        function copyText() {
+            let table = document.getElementById('outputTable');
+            let text = "Produk ID\tKlik Produk\tProduk Terjual\tPenjualan\n";
+
+            for (let i = 1; i < table.rows.length; i++) {
+                let row = table.rows[i];
+                text += row.cells[0].innerText + "\t" +
+                        row.cells[1].innerText + "\t" +
+                        row.cells[2].innerText + "\t" +
+                        row.cells[3].innerText + "\n";
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Teks berhasil disalin!');
+            }).catch(err => {
+                alert('Gagal menyalin teks: ' + err);
             });
         }
+
+        function copyProdukID() {
+            let table = document.getElementById('outputTable');
+            let produkIDs = [];
+
+            for (let i = 1; i < table.rows.length; i++) {
+                produkIDs.push(table.rows[i].cells[0].innerText);
+            }
+
+            // Menyalin Produk ID ke clipboard
+            navigator.clipboard.writeText(produkIDs.join("\n")).then(() => {
+                alert('Produk ID berhasil disalin!');
+            }).catch(err => {
+                alert('Gagal menyalin Produk ID: ' + err);
+            });
+        }
+
+        function downloadCSV() {
+            let table = document.getElementById('outputTable');
+            let csvContent = "Produk ID,Klik Produk,Produk Terjual,Penjualan\n";
+
+            for (let i = 1; i < table.rows.length; i++) {
+                let row = table.rows[i];
+                csvContent += row.cells[0].innerText + "," +
+                              row.cells[1].innerText + "," +
+                              row.cells[2].innerText + "," +
+                              row.cells[3].innerText + "\n";
+            }
+
+            let blob = new Blob([csvContent], { type: 'text/csv' });
+            let link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "data_produk.csv";
+            link.click();
+        }
     </script>
+
 </body>
 </html>
